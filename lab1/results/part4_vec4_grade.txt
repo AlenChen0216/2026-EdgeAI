@@ -1,0 +1,34 @@
+== correctness: 15 shapes x 2 betas
+   128 128 128 done
+   1024 1024 1024 done
+   4096 4096 4096 done
+   1000 1000 1000 done
+   1023 257 511 done
+   1 1 1 done
+   7 13 3 done
+   4096 1 4096 done
+   1 4096 4096 done
+   8192 1 8192 done
+   16 4096 4096 done
+   4096 4096 64 done
+   64 64 65536 done
+   1000 1 1001 done
+   4097 1 4099 done
+== sanitizer: 10 kernels x 8 runs
+
+== Part 2
+   coalesced                  PASS
+== Part 3
+   smem16                     PASS
+   smem32                     PASS
+   reg2d_128x128x8_8x8        PASS
+   reg2d_64x64x8_4x4          PASS
+   reg2d_128x64x8_8x4         PASS
+   reg2d_64x128x8_8x4         PASS
+   reg2d_64x64x16_4x4         PASS
+   reg2d_128x128x32_8x8       PASS
+   reg2d configurations       6 correct of 6 registered (need >= 6): PASS
+== Part 4 (chain at 4096 4096 4096, best of 3 x median of 20)
+   0 reg2d_128x128x8_8x8         7.226 ms  starting point
+   1 custom_vec4                 3.087 ms  2.341x vs reg2d_128x128x8_8x8: successful, 5 pts
+   Part 4 points: 5 / 10

@@ -1,0 +1,37 @@
+nvcc -O3 -std=c++17 -arch=native -use_fast_math -lineinfo -Xptxas -v -o sgemm src/main.cu -lcublas 2> ptxas_info.txt || (cat ptxas_info.txt; false)
+Compiling entry function 'void sgemm_custom_vec4<(int)128, (int)128, (int)8, (int)8, (int)8>(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 91 registers, used 1 barriers, 8192 bytes smem
+Compiling entry function 'void sgemm_reg2d<(int)128, (int)128, (int)32, (int)8, (int)8>(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 108 registers, used 1 barriers, 32768 bytes smem
+Compiling entry function 'void sgemm_reg2d<(int)64, (int)64, (int)16, (int)4, (int)4>(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 40 registers, used 1 barriers, 8192 bytes smem
+Compiling entry function 'void sgemm_reg2d<(int)64, (int)128, (int)8, (int)8, (int)4>(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 66 registers, used 1 barriers, 6144 bytes smem
+Compiling entry function 'void sgemm_reg2d<(int)128, (int)64, (int)8, (int)8, (int)4>(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 66 registers, used 1 barriers, 6144 bytes smem
+Compiling entry function 'void sgemm_reg2d<(int)64, (int)64, (int)8, (int)4, (int)4>(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 40 registers, used 1 barriers, 4096 bytes smem
+Compiling entry function 'void sgemm_reg2d<(int)128, (int)128, (int)8, (int)8, (int)8>(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 94 registers, used 1 barriers, 8192 bytes smem
+Compiling entry function 'void sgemm_smem<(int)32>(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 40 registers, used 1 barriers, 8192 bytes smem
+Compiling entry function 'void sgemm_smem<(int)16>(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 39 registers, used 1 barriers, 2048 bytes smem
+Compiling entry function 'count_bad_guard(const unsigned int *, unsigned long, unsigned long long *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 14 registers, used 0 barriers
+Compiling entry function 'sgemm_coalesced(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 38 registers, used 0 barriers
+Compiling entry function 'sgemm_naive(int, int, int, float, const float *, const float *, float, float *)' for 'sm_120'
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+Used 38 registers, used 0 barriers

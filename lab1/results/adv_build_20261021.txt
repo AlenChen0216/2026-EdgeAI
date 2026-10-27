@@ -1,0 +1,88 @@
+Build time (UTC+08:00): 2026-10-21T20:08:24.123338+08:00
+Command: nvcc -O3 -std=c++17 -arch=native -use_fast_math -lineinfo -Xptxas -v -o /tmp/edgeai-adv-20261021-b_vqm4jt/sgemm src/main.cu -lcublas
+SOURCE_SHA256 src/common.cuh bb2910e164723961165f1e076feef8b054c6f86b4e0c03813dfb7bac5028f36e
+SOURCE_SHA256 src/kernels/coalesced.cuh 34a43e70da4aee8648aab80ab452683471b3d0da3b33898fb7ad6ac6c2173406
+SOURCE_SHA256 src/kernels/custom.cuh bed1c6706c854c5084ceb7d5af5e436a22ecfe497e307b568684787f600a7ba8
+SOURCE_SHA256 src/kernels/naive.cuh 936972f54848a9c53c5afbc9d0864cbb41e0dcd069a8675b503a97e7a8e7cf9a
+SOURCE_SHA256 src/kernels/reg2d.cuh 3c75c2fb2fd4f0a1c7e1c1e4ee332e1c7d7f670dda7880a897f73646cb5273cc
+SOURCE_SHA256 src/kernels/smem.cuh ee950ac40627637844284d2c5aaf9e0b953adf7c0b5e59b549527f312a3f146e
+SOURCE_SHA256 src/kernels.cuh 27f1f5eb7aaee49d6819160c59ad2993ac0c621c399308d718d0c3bfafaf05b4
+SOURCE_SHA256 src/main.cu 01d7b801ef7e1b9bed8f906ae454887ce9127538853ed26893a468d43e1a3419
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2026 NVIDIA Corporation
+Built on Tue_Sep_01_08:45:21_PDT_2026
+Cuda compilation tools, release 13.4, V13.4.92
+Build cuda_13.4.r13.4/compiler.38855100_0
+ptxas info    : 0 bytes gmem
+ptxas info    : Compiling entry function '_Z28sgemm_custom_vec4_warptilingILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z28sgemm_custom_vec4_warptilingILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 91 registers, used 1 barriers, 8192 bytes smem
+ptxas info    : Compile time = 13.623 ms
+ptxas info    : Compiling entry function '_Z17sgemm_custom_vec4ILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z17sgemm_custom_vec4ILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 91 registers, used 1 barriers, 8192 bytes smem
+ptxas info    : Compile time = 12.113 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi128ELi128ELi32ELi8ELi8EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi128ELi128ELi32ELi8ELi8EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 108 registers, used 1 barriers, 32768 bytes smem
+ptxas info    : Compile time = 14.400 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi64ELi64ELi16ELi4ELi4EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi64ELi64ELi16ELi4ELi4EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 40 registers, used 1 barriers, 8192 bytes smem
+ptxas info    : Compile time = 6.068 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi64ELi128ELi8ELi8ELi4EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi64ELi128ELi8ELi8ELi4EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 66 registers, used 1 barriers, 6144 bytes smem
+ptxas info    : Compile time = 13.862 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi128ELi64ELi8ELi8ELi4EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi128ELi64ELi8ELi8ELi4EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 66 registers, used 1 barriers, 6144 bytes smem
+ptxas info    : Compile time = 13.837 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi64ELi64ELi8ELi4ELi4EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi64ELi64ELi8ELi4ELi4EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 40 registers, used 1 barriers, 4096 bytes smem
+ptxas info    : Compile time = 8.724 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 94 registers, used 1 barriers, 8192 bytes smem
+ptxas info    : Compile time = 12.475 ms
+ptxas info    : Compiling entry function '_Z10sgemm_smemILi32EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z10sgemm_smemILi32EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 40 registers, used 1 barriers, 8192 bytes smem
+ptxas info    : Compile time = 4.326 ms
+ptxas info    : Compiling entry function '_Z10sgemm_smemILi16EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z10sgemm_smemILi16EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 39 registers, used 1 barriers, 2048 bytes smem
+ptxas info    : Compile time = 6.206 ms
+ptxas info    : Compiling entry function '_Z15count_bad_guardPKjmPy' for 'sm_120'
+ptxas info    : Function properties for _Z15count_bad_guardPKjmPy
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 14 registers, used 0 barriers
+ptxas info    : Compile time = 1.545 ms
+ptxas info    : Compiling entry function '_Z8l2_evictPK6float4mPf' for 'sm_120'
+ptxas info    : Function properties for _Z8l2_evictPK6float4mPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 10 registers, used 0 barriers
+ptxas info    : Compile time = 1.446 ms
+ptxas info    : Compiling entry function '_Z15sgemm_coalescediiifPKfS0_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z15sgemm_coalescediiifPKfS0_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 38 registers, used 0 barriers
+ptxas info    : Compile time = 5.226 ms
+ptxas info    : Compiling entry function '_Z11sgemm_naiveiiifPKfS0_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_naiveiiifPKfS0_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 38 registers, used 0 barriers
+ptxas info    : Compile time = 3.678 ms
+
+BINARY_SHA256 0be97ce723f36fc947a0ea73673fae63b184f661a8b2905a6b7a7a4f0bed7248

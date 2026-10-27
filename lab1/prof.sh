@@ -1,0 +1,1 @@
+sudo env PATH="/usr/local/cuda/bin:$PATH"     bash scripts/profile.sh $1 4096 4096 4096

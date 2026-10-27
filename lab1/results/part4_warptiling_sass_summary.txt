@@ -1,0 +1,5 @@
+_Z28sgemm_custom_vec4_warptilingILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf
+{'BRA': 1, 'BRA.U': 3, 'FFMA.FTZ': 128, 'IADD': 10, 'IADD3': 1, 'LDG.E': 64, 'LDG.E.128.CONSTANT': 2, 'LDS.128': 4, 'LOP3.LUT': 12, 'STS': 4, 'STS.128': 1}
+
+_Z17sgemm_custom_vec4ILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf
+{'BRA': 1, 'BRA.U': 3, 'FFMA.FTZ': 128, 'IADD': 4, 'LDG.E': 64, 'LDG.E.128.CONSTANT': 2, 'LDS.128': 4, 'LOP3.LUT': 9, 'STS': 4, 'STS.128': 1}

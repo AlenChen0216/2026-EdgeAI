@@ -1,0 +1,71 @@
+ptxas info    : 0 bytes gmem
+ptxas info    : Compiling entry function '_Z28sgemm_custom_vec4_warptilingILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z28sgemm_custom_vec4_warptilingILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 91 registers, used 1 barriers, 8192 bytes smem
+ptxas info    : Compile time = 12.793 ms
+ptxas info    : Compiling entry function '_Z17sgemm_custom_vec4ILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z17sgemm_custom_vec4ILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 91 registers, used 1 barriers, 8192 bytes smem
+ptxas info    : Compile time = 11.263 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi128ELi128ELi32ELi8ELi8EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi128ELi128ELi32ELi8ELi8EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 108 registers, used 1 barriers, 32768 bytes smem
+ptxas info    : Compile time = 13.709 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi64ELi64ELi16ELi4ELi4EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi64ELi64ELi16ELi4ELi4EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 40 registers, used 1 barriers, 8192 bytes smem
+ptxas info    : Compile time = 5.738 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi64ELi128ELi8ELi8ELi4EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi64ELi128ELi8ELi8ELi4EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 66 registers, used 1 barriers, 6144 bytes smem
+ptxas info    : Compile time = 12.915 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi128ELi64ELi8ELi8ELi4EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi128ELi64ELi8ELi8ELi4EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 66 registers, used 1 barriers, 6144 bytes smem
+ptxas info    : Compile time = 12.781 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi64ELi64ELi8ELi4ELi4EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi64ELi64ELi8ELi4ELi4EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 40 registers, used 1 barriers, 4096 bytes smem
+ptxas info    : Compile time = 7.098 ms
+ptxas info    : Compiling entry function '_Z11sgemm_reg2dILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_reg2dILi128ELi128ELi8ELi8ELi8EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 94 registers, used 1 barriers, 8192 bytes smem
+ptxas info    : Compile time = 11.248 ms
+ptxas info    : Compiling entry function '_Z10sgemm_smemILi32EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z10sgemm_smemILi32EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 40 registers, used 1 barriers, 8192 bytes smem
+ptxas info    : Compile time = 3.998 ms
+ptxas info    : Compiling entry function '_Z10sgemm_smemILi16EEviiifPKfS1_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z10sgemm_smemILi16EEviiifPKfS1_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 39 registers, used 1 barriers, 2048 bytes smem
+ptxas info    : Compile time = 5.846 ms
+ptxas info    : Compiling entry function '_Z15count_bad_guardPKjmPy' for 'sm_120'
+ptxas info    : Function properties for _Z15count_bad_guardPKjmPy
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 14 registers, used 0 barriers
+ptxas info    : Compile time = 1.200 ms
+ptxas info    : Compiling entry function '_Z8l2_evictPK6float4mPf' for 'sm_120'
+ptxas info    : Function properties for _Z8l2_evictPK6float4mPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 10 registers, used 0 barriers
+ptxas info    : Compile time = 1.117 ms
+ptxas info    : Compiling entry function '_Z15sgemm_coalescediiifPKfS0_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z15sgemm_coalescediiifPKfS0_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 38 registers, used 0 barriers
+ptxas info    : Compile time = 3.420 ms
+ptxas info    : Compiling entry function '_Z11sgemm_naiveiiifPKfS0_fPf' for 'sm_120'
+ptxas info    : Function properties for _Z11sgemm_naiveiiifPKfS0_fPf
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 38 registers, used 0 barriers
+ptxas info    : Compile time = 3.420 ms
