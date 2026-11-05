@@ -2,16 +2,75 @@
 
 依據：[作業要求](../HW.md)、[題目 notebook](part1.ipynb)。本文件提供推導方向、操作順序與檢查方法，填空由你完成。
 
-## 1. 先確認環境與修改範圍
+## 1. 使用 Colab kernel 開發與驗證
 
-- Part 1 占 30%，使用 **PyTorch 2.6.0**；與 Part 2、Part 3 的環境分開。
-- 使用 GPU runtime。notebook 會把 MobileNetV2 移到 CUDA，作業列出的 T4 環境可作為起點。
-- 依 HW.md 的連結下載 `mobilenetv2_0.963.pth`，確認 notebook 預期的檔案位置。
-- 只修改 `YOUR CODE STARTS HERE` 到 `YOUR CODE ENDS HERE` 之間的內容；不要修改測試或給定的 helper。
+Part 1 在 VS Code 編輯本機的 [part1.ipynb](part1.ipynb)，將 cells 送到 **Colab GPU kernel** 執行；本機 RTX 5090 不參與這份 notebook 的運算。Part 2、Part 3 則採用 [5090 開發、Colab T4 驗證](../part2/guide.md) 的流程。
 
-目前 setup cell 的安裝指令沒有鎖定版本，直接執行不保證得到 2.6.0。先在 notebook 外部的環境設定中處理版本，再用 notebook 已有的 `print(torch.__version__)` 確認。模型路徑目前寫成 Kaggle 路徑；若使用其他平台，先詢問助教允許的路徑調整方式，不要為了通過測試改寫受限制的程式區塊。
+- Part 1 占 30%，使用 **PyTorch 2.6.0**；本指南採用 CUDA 12.4 的套件版本，與 Part 2、Part 3 的環境分開。
+- notebook 會把 MobileNetV2 移到 CUDA，可先選老師列出的 T4；若選 A100，也要保留相同套件版本並記錄 GPU 型號。
+- 只修改 `YOUR CODE STARTS HERE` 到 `YOUR CODE ENDS HERE` 之間的內容；測試與給定 helper 維持原樣。環境檢查放在另外的 setup notebook 或 Colab terminal。
 
-開始前記下 Python、PyTorch、GPU 型號與模型檔案來源。完成後重新啟動 kernel，由上到下執行，避免殘留變數讓錯誤被掩蓋。
+### 1.1 連接 Colab 並掛載到 workspace
+
+1. 在 VS Code 安裝 Google 的 **Colab** 與它需要的 **Jupyter** 擴充套件。
+2. 開啟 `part1.ipynb`，點右上角 kernel 選單，選 **Colab → New Colab Server**，登入並建立 GPU runtime。若原先已選本機 kernel，先點 **Select Another Kernel…**。
+3. 在 VS Code 設定搜尋 `Colab: Server Mounting` 並啟用；也確認 `Colab: Terminal` 已啟用。需要時執行 **Developer: Reload Window**，再連回同一個 server。
+4. 開啟命令面板，執行 **Colab: Mount Server To Workspace…**，選擇剛才的 server。這會將 Colab 檔案系統加入目前 workspace。
+5. 執行 **Colab: Open Terminal**，選擇同一個 server。之後標為「Colab terminal」的命令都在這個終端機執行。
+
+設定名稱與操作可參考 [Colab 官方指南](https://github.com/googlecolab/colab-vscode/wiki/User-Guide#experimental-features)。這個掛載是 Colab server 檔案系統，與 Google Drive 掛載不同；本機原有 terminal 仍在本機執行。
+
+### 1.2 在 Colab 安裝 Part 1 的版本
+
+先在連到同一個 server 的獨立 setup notebook 檢查 kernel 的 Python 路徑：
+
+```python
+import sys
+print(sys.executable)
+```
+
+在 **Colab terminal** 執行 `python -c "import sys; print(sys.executable)"`，確認是同一套 Python。若不同，以下命令的 `python` 請改用 notebook 顯示的完整路徑；不要裝到 Part 2、Part 3 的虛擬環境。
+
+```bash
+python -m pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+python -m pip install timm matplotlib
+```
+
+套件版本依據 [PyTorch 官方安裝表](https://docs.pytorch.org/get-started/previous-versions/)。安裝後重新啟動 **Part 1 的 kernel**，讓它載入剛安裝的套件。在獨立 setup notebook 檢查：
+
+```python
+import torch
+
+print(torch.__version__)             # 預期 2.6.0+cu124
+print(torch.version.cuda)            # 預期 12.4
+print(torch.cuda.is_available())      # 預期 True
+print(torch.cuda.get_device_name(0))
+print(torch.ones(1, device="cuda") + 1)
+```
+
+目前題目 setup cell 沒有鎖定版本，執行後仍要用題目已有的 `print(torch.__version__)` 再確認一次。若版本不符，先處理套件依賴。`nvidia-smi` 的 CUDA 欄位表示驅動可支援的版本，核對 PyTorch 套件時以 `torch.version.cuda` 為準。
+
+### 1.3 用 GUI 複製模型檔，保留題目原有路徑
+
+依 [HW.md](../HW.md) 的連結下載 `mobilenetv2_0.963.pth`。在 **Colab terminal** 建立上傳位置：
+
+```bash
+mkdir -p /content/lab2/part1
+```
+
+在 VS Code 掛載的 Colab 目錄找到 `/content/lab2/part1`，以 GUI 拖拉的**複製**方式放入模型檔，確認本機原始檔仍保留。若 terminal 新建的資料夾未出現，重新整理檔案樹。第一次設定時，在 **Colab terminal** 建立與題目相同的模型路徑：
+
+```bash
+ls -lh /content/lab2/part1/mobilenetv2_0.963.pth
+mkdir -p /kaggle/input/model/pytorch/default/1
+ln -s /content/lab2/part1/mobilenetv2_0.963.pth /kaggle/input/model/pytorch/default/1/mobilenetv2_0.963.pth
+```
+
+目前 `torch.load()` 使用 `/kaggle/input/model/pytorch/default/1/mobilenetv2_0.963.pth`。這個連結讓 Colab 也能使用原路徑，不需改寫題目載入程式。若目標路徑已存在，先用 `ls -l` 核對，不必再次建立連結。
+
+Part 1 的 notebook 仍以本機檔案為主，執行後儲存 cells 與輸出即可；上傳一份 notebook 不會自動切換目前編輯的檔案。Colab runtime 被刪除或換成新 server 後，需重新安裝環境、掛載並放回模型。
+
+開始前記下 Python、PyTorch、GPU 型號與模型來源。完成後重新啟動 Colab kernel，由上到下執行，避免殘留變數讓錯誤被掩蓋。
 
 ## 2. 先建立三個觀念
 

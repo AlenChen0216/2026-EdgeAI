@@ -2,12 +2,132 @@
 
 依據：[作業要求](../HW.md)、[run_eval.py](run_eval.py)、[evaluate.py](evaluate.py)。本文件協助你設計與檢查實驗；不提供四個 Case 的完成配置，也不預先宣稱任何方法能達標。
 
+## 0. 在 5090 開發，掛載 Colab 後用 T4 驗證
+
+主要實作放在 `.py`，實驗參數放在設定檔或命令列；notebook 用來連接 Colab server、掛載檔案系統與查看結果。日常在本機 5090 開發，每完成一個 Case 就將同一份程式複製到 Colab T4，重跑「原始模型 → 壓縮 → 指定評估」流程。
+
+| 用途 | GPU | Python | PyTorch |
+| --- | --- | --- | --- |
+| 本機開發 | RTX 5090 | 3.11 | 本指南以 `2.7.0+cu128` 為起點 |
+| 作業環境驗證 | Colab T4 | 3.11 | HW.md 指定的 `2.5.1+cu121` |
+
+5090 使用 Blackwell 架構，PyTorch 從 [2.7 與 CUDA 12.8](https://pytorch.org/blog/pytorch-2-7/) 加入支援。兩邊分開建立環境；其他套件盡量鎖定相同版本，實作使用 PyTorch 2.5.1 已提供的介面。開發環境能執行，仍需由 T4 的指定環境確認相容性。
+
+### 0.1 第一次建立本機開發環境
+
+以下是 **5090 主機的 terminal** 命令。若尚未安裝 `uv`，依 [官方安裝方式](https://docs.astral.sh/uv/getting-started/installation/)執行：
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source "$HOME/.local/bin/env"
+```
+
+第一次建立環境；之後開新 terminal 只需重新 `source` 啟用：
+
+```bash
+uv venv --python 3.11 --seed ~/.venvs/edgeai-5090
+source ~/.venvs/edgeai-5090/bin/activate
+python -m pip install torch==2.7.0 --index-url https://download.pytorch.org/whl/cu128
+python -m pip install transformers==4.56.2 datasets==3.6.0 accelerate==1.10.1
+```
+
+這組額外依賴是起始配置，以兩邊都能完成原始模型評估作為相容性確認。`transformers` 必須支援 Qwen3 及現有 loader 的 `dtype=` 參數；[4.56.2 文件](https://huggingface.co/docs/transformers/v4.56.2/en/main_classes/model)列有此介面。跑通後將共同依賴寫入 requirements；本機使用的 torch／CUDA 版本另外記錄，提交用的 `requirements.txt` 以驗證環境為準。
+
+在本機檢查 Python、套件與實際 CUDA 運算：
+
+```bash
+python - <<'PY'
+import sys
+import torch
+
+print(sys.executable)
+print(sys.version)
+print(torch.__version__, torch.version.cuda)
+print(torch.cuda.get_device_name(0))
+print(torch.ones(1, device="cuda") + 1)
+PY
+```
+
+應確認是 Python 3.11、`2.7.0+cu128`、RTX 5090。這裡不需要將開發程式改成 notebook；在 VS Code 選擇這個環境的 Python，再從已啟用環境的本機 terminal 執行 `.py`。
+
+### 0.2 將 Colab server 掛載到目前 workspace
+
+1. 在 VS Code 安裝 Google **Colab** 與 **Jupyter** 擴充套件，開啟一份獨立的連線 notebook。
+2. 從 kernel 選單選 **Colab → New Colab Server → T4**，完成登入與連線。
+3. 在設定啟用 **Colab: Server Mounting**，確認 **Colab: Terminal** 也已啟用。需要時執行 **Developer: Reload Window** 並重新連線。
+4. 執行 **Colab: Mount Server To Workspace…**，選擇剛建立的 server。檔案總管會同時顯示本機專案與掛載的 Colab 檔案區。
+5. 執行 **Colab: Open Terminal**，選擇同一個 server。在這個 terminal 執行：
+
+```bash
+pwd
+nvidia-smi
+mkdir -p /content/lab2
+```
+
+確認 GPU 是 T4。即使本機專案是透過 Remote SSH 開啟，也使用這個掛載與拖拉複製流程；操作說明見 [Colab 官方指南](https://github.com/googlecolab/colab-vscode/wiki/User-Guide#experimental-features)。此處掛載的是 Colab server，與 Google Drive 掛載不同。
+
+### 0.3 用 GUI 複製程式，確認檔案版本
+
+在掛載的 Colab 檔案區找到 `/content/lab2`，將本機 `lab2/part2`、`lab2/part3` 拖拉**複製**到這裡。第一次複製後應有 `/content/lab2/part2` 與 `/content/lab2/part3`；本機仍保留原資料夾。若已有同名資料夾，更新其中的程式與設定，確認覆寫的是本次要驗證的檔案。
+
+- 複製 `.py`、設定檔、requirements、入口腳本與必要 helper。本機 `.venv`、`.python`、`.git` 及 CUDA 套件不需上傳；兩邊各自安裝環境。
+- 每次先儲存本機檔案，再複製更新。拖拉是一次檔案複製，沒有自動雙向同步；重新命名或刪除的檔案也要同步整理，避免 Colab 載入舊模組。
+- 若 terminal 建立或修改的檔案沒有出現在 GUI，重新整理掛載目錄。Colab 產生的結果與日誌也用複製方式存回本機。
+
+在 **Colab terminal** 核對目的地：
+
+```bash
+ls -l /content/lab2/part2
+sha256sum /content/lab2/part2/run_eval.py /content/lab2/part2/evaluate.py
+```
+
+在 **5090 主機 terminal** 對相同檔案執行：
+
+```bash
+cd /home/alen/2026-EdgeAI
+sha256sum lab2/part2/run_eval.py lab2/part2/evaluate.py
+```
+
+兩邊對應的 hash 應相同。加入壓縮模組與設定檔後，也要核對本次實驗使用的那些檔案。執行中的程序不會因檔案覆寫而自動載入新版本；每次更新後以新的 Python 程序開始實驗。
+
+### 0.4 在 Colab terminal 建立驗證環境
+
+以下全部是 **Colab terminal 的 Bash 命令**，不加 notebook 的 `!` 或 `%`。若 Colab 沒有 `uv`，先在這個 terminal 執行第 0.1 節的安裝命令；本機安裝過 `uv` 不代表 Colab 也有。
+
+```bash
+uv venv --python 3.11 --seed /content/edgeai-t4
+source /content/edgeai-t4/bin/activate
+python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+python -m pip install transformers==4.56.2 datasets==3.6.0 accelerate==1.10.1
+```
+
+`uv` 可下載缺少的 Python 3.11，見 [環境管理文件](https://docs.astral.sh/uv/pip/environments/)。這套環境獨立於 notebook kernel；切換 notebook kernel 不會替 terminal 啟用環境。每開一個新的 Colab terminal，都重新執行 `source /content/edgeai-t4/bin/activate`。
+
+重跑第 0.1 節的環境檢查，應看到 Python 3.11、`2.5.1+cu121`、CUDA 12.1 與 T4；CUDA tensor 運算也要成功。`torch.version.cuda` 是套件使用的 CUDA 版本，與 `nvidia-smi` 顯示的驅動支援版本可以不同。
+
+Part 2 與 Part 3 可共用這套環境，新增依賴後要重新確認兩部分都能執行。Part 1 的 notebook 使用獨立的 PyTorch 2.6.0 環境。Colab server 被刪除或 runtime 重建後，需重新掛載、建立環境並複製程式。
+
+### 0.5 固定每次驗證與保存結果的順序
+
+1. 本機儲存程式，先做小矩陣、單層與完整流程的開發檢查。
+2. 複製本次程式與設定到 Colab，核對路徑與版本。
+3. 在 Colab terminal 啟用驗證環境，從原始模型重跑壓縮與指定評估。
+4. 記錄本機程式版本／檔案 hash、模型 revision、套件版本、dtype、seed、配置、CR、PPL、耗時及量測到的峰值顯存。
+5. 將結果與日誌複製回本機，確認保存後再釋放 Colab server。
+
+5090 與 T4 的顯存容量不同，開發時避免不必要的完整模型副本，並及早在 T4 跑通完整流程。兩邊使用相同的評估 dtype，先沿用入口預設的 `float16`。如果顯存不足，檢查模型與暫存生命週期；仍遵守第 1 節對 offloading 等技巧的限制。
+
+GPU 與套件版本不同可能造成浮點結果差異，固定 seed 也不保證逐位相同。分別保留兩邊的 baseline 與壓縮結果，報告標明環境，最終以指定環境實測確認。這些環境差異可參考 [PyTorch 數值精度說明](https://docs.pytorch.org/docs/stable/notes/numerical_accuracy.html)。
+
 ## 1. 先把限制寫進實驗紀錄
 
 - 占 50%，固定模型為 **`Qwen/Qwen3-4B`**。
 - 評分基礎環境是 **Python 3.11、`torch==2.5.1+cu121`**。
 - 四個 Case 都從相同的原始模型開始；使用同一模型版本，避免把上一個 Case 的壓縮模型繼續壓縮當成下一個 Case。
 - 壓縮率依目標 Linear layers 計算，壓縮方法新增的參數也要納入。
+- 目標範圍只計算 transformer block 內的 Linear layers（例如 q/k/v/o、gate/up/down）；`lm_head` 不納入 Part 2 的壓縮率。
+- 只壓縮部分目標層時，其他未壓縮的目標層仍以原始大小計入。
+- 同一個壓縮方法可以重複用於多個 Case，但每個 Case 仍須從相同的原始模型重新執行並獨立量測。
 - 所有 PPL 都必須使用老師提供的 `run_eval.py`，不得替換或更動 PPL 評估程序。
 - 禁止 KV cache 壓縮／量化、speculative decoding、parameter offloading、fine-tuning、多 GPU model parallelism，以及只降低記憶體使用、未壓縮模型的技巧。
 
@@ -28,20 +148,29 @@
 | --- | --- | --- |
 | `run_eval.py` 的 `main()` | 載入模型後直接評估，沒有呼叫壓縮函式 | 傳入 `--case` 並不會套用該 Case 的壓縮 |
 | `--rate`、`--wbits` | 有解析參數，但目前沒有用於壓縮 | 更改旗標不會改變模型 |
-| `evaluate.py` 的 `compression_rate()` | 兩條路徑目前都回傳 0 | 尚不能取得有效的壓縮率 |
+| `evaluate.py` 的 `compression_rate()` | 兩條路徑目前都回傳 0 | 需依實際使用的壓縮方法自行計算壓縮率 |
 | `compression_rate()` 的 docstring | 提到 `common.record_base(model)` | 目前 `part2/` 沒有這個實作，需確認是否漏發檔案 |
 
-先向助教確認：是否有完整的 starter、預留的壓縮接入位置，以及允許實作壓縮率計算的範圍。**保留 PPL 的資料、切段與 loss 計算程序**。這些占位內容不表示你能重寫評估；也不要用輸入的目標 rate 當成量測結果。
+確認完整 starter 與預留的壓縮接入位置後，依實際使用的壓縮方法自行計算壓縮率；不要用輸入的目標 rate 當成量測結果。**保留 PPL 的資料、切段與 loss 計算程序**，不要重寫評估。
 
 ## 3. 先跑一次原始模型
 
-在符合版本要求、已裝好相容 dependencies 的環境中，從專案根目錄執行現有入口：
+先在已啟用開發環境的 **5090 主機 terminal**，從專案根目錄執行：
 
 ```bash
-python lab2/part2/run_eval.py
+cd /home/alen/2026-EdgeAI
+python lab2/part2/run_eval.py --dtype float16 --seed 0
 ```
 
-這個命令目前評估的是原始模型；它不會替你安裝套件。先檢查現有 imports：`torch`、`transformers`、`datasets`，以及模型載入路徑需要的套件，再把實際可重現的版本寫入 `requirements.txt`。不要把未測試過的最新套件組合當成完成的環境。
+依第 0 節掛載、複製程式並建立 T4 環境後，在 **Colab terminal** 執行相同入口：
+
+```bash
+source /content/edgeai-t4/bin/activate
+cd /content/lab2/part2
+python run_eval.py --dtype float16 --seed 0
+```
+
+兩個命令目前都評估原始模型，不會套用 Case 壓縮。先檢查現有 imports：`torch`、`transformers`、`datasets`，以及模型載入路徑需要的套件，再把實際可重現的版本寫入 `requirements.txt`。不要把未測試過的最新套件組合當成完成的環境。
 
 紀錄模型與 tokenizer 版本、套件版本、dtype、seed、GPU、原始 PPL、執行命令與錯誤訊息。現有 loader 預設 float16、CUDA，會設為 eval mode、停用 KV cache 並關閉參數梯度。
 
@@ -55,7 +184,9 @@ python lab2/part2/run_eval.py
 
 `Compression Ratio = 1 - Compressed Size / Original Size`
 
-先列出所有目標 Linear 的名稱、weight shape、bias、原始 dtype 與 bytes，固定統計範圍。特別確認 `lm_head` 是否屬於目標、未處理的 Linear 如何計算、是否存在共享儲存；不能只選成功壓縮的層當分母。
+先列出 transformer block 內所有目標 Linear 的名稱、weight shape、bias、原始 dtype 與 bytes，固定統計範圍；`lm_head` 不納入 Part 2 壓縮率。未處理的目標 Linear 仍以原始大小計算，不能只選成功壓縮的層當分母。
+
+若目標 Linear 有共享權重，依模型運作時的使用次數計算：若共享區塊的運算結果也能共用，只記一次；若共享後仍進行兩次以上運算，按實際運算次數作為倍率。
 
 為每層記錄下列項目：
 
@@ -111,7 +242,7 @@ forward 為了運算而反量化可以是實作的一部分，但若長期另存
 3. 若再結合其他方法，重新統計最終 factors 與所有額外資訊的 bytes。
 4. 用完整模型的官方 PPL 評估檢查品質；矩陣重建誤差小不保證 PPL 達標。
 
-**需要向助教釐清**：HW.md 條件寫 Overall Compression Ratio **= 50%**，範例卻列 **50.4%**，未交代容許誤差；另外也沒有完整定義「SVD Compression Ratio」的統計口徑。暫時保留未四捨五入的 bytes 與比例，按文字條件設計，不自行把 `= 50%` 當成 `≥ 50%`。
+Overall Compression Ratio **= 50%** 是剛好 50%，不是 `≥ 50%`；允許誤差為 **±0.5 個百分點**，因此可接受約 49.5%–50.5%。保留未四捨五入的 bytes 與比例，再說明實際誤差。SVD Compression Ratio 仍須以實際保留的 SVD factors 與額外資訊計算。
 
 ## 8. Case 4：剪枝率與實際壓縮要分別證明
 
@@ -129,7 +260,7 @@ forward 為了運算而反量化可以是實作的一部分，但若長期另存
 
 ## 9. 讓實驗紀錄能直接支撐報告
 
-每次執行記一列；未測量的欄位留空，不填預期結果。
+每次執行記一列；未測量的欄位留空，不填預期結果。同一個實驗 ID 分別記錄 5090 與 T4 的結果，附上程式 hash、環境版本與執行命令；表中的正式結果取自 T4 指定環境的完整驗證。
 
 | Case／實驗 ID | 目標層與方法 | bits／group size／rank／剪枝設定 | 原始 bytes | 壓縮 bytes | CR | SVD CR／剪枝率 | 官方 PPL |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -148,7 +279,7 @@ forward 為了運算而反量化可以是實作的一部分，但若長期另存
 
 `run.sh` 必須安裝依賴、從相同原始模型分別執行四個 Case、用提供的評估程序取得 PPL，最後只在標準輸出列出各 Case 的 CR 與 PPL。安裝與除錯訊息可寫入 stderr 或日誌；不要丟掉它們，否則失敗時無法定位原因。
 
-在全新環境驗證 `bash run.sh`，不能依賴手動先安裝套件或事先準備但未說明的壓縮模型。若需下載權重與資料，也要讓入口流程能處理並記錄來源。
+在 Colab T4 的乾淨 Python 3.11 環境中，按提交說明驗證 `bash run.sh`。入口要自行安裝指定的 `torch==2.5.1+cu121` 與其他依賴，不能依賴第 0 節探索時已手動裝好的套件，或事先準備但未說明的壓縮模型。若需下載權重與資料，也要讓入口流程能處理並記錄來源。GUI 掛載與拖拉是開發時的傳檔方式，助教在取得提交資料夾後不應需要操作 VS Code 才能執行。
 
 提交前另有一個檔名矛盾：Part 2 章節指定 `run.sh`，Overall Submission 列 `StudentID_run.sh`。向助教確認後統一命名；釐清前可規劃共用一個實作、以另一個入口呼叫，避免兩份流程不同步。
 
