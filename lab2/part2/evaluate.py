@@ -46,12 +46,9 @@ def eval_ppl_wikitext2(model, tokenizer, seqlen=2048):
 
 
 def compression_rate(model):
-    """0 for a model that was not compressed in this process; otherwise needs
-    common.record_base(model) to have been called before compressing."""
-    if not hasattr(model, "_base_linear_numel"):
-        return 0.0
-
-    return 0
+    """Measured target-layer bytes; the PPL procedure above is unchanged."""
+    from common import compression_rate as measured_rate
+    return measured_rate(model)
 
 
 if __name__ == "__main__":

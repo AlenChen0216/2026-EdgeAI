@@ -34,3 +34,6 @@
 
 - Every time you use a `special noun or adjective`, you must make sure those `noun and adjective` is **widely used** by the experts in that field.
 
+## 可以做的
+
+- 可以開一個 jupyter notebook ，並把他 mount 到目前 workspace 中。 這樣，就可以透過任意拖拉 本 host 的 folder 到 colab 上。

@@ -150,9 +150,9 @@ You must use the provided `run_eval` for all PPL evaluations.
 Your submitted code must include at least the following files:
 
 ```text
-YourID_Part2/
+Part2/
 ├── requirements.txt
-├── run.sh
+├── StudentID_run.sh
 ├── run_eval.py
 └── ...
 ```
@@ -171,7 +171,7 @@ The provided `run.sh` must serve as the **main entry point** of your submission.
 Your submission should be executable using:
 
 ```bash
-bash run.sh
+bash StudentID_run.sh
 ```
 
 No additional commands should be required before running `run.sh`.
@@ -238,7 +238,7 @@ In this part, you will implement a **calibration-free Post-Training Quantization
 
 The following paper is provided as the reference method:
 
-**[AdaptQuant: Hardware-Aligned Per-Tile MX Format Selection for Post-Training Quantization on NVIDIA Blackwell](https://openreview.net/forum?id=ZGeR4gkEZq)**
+[**AdaptQuant: Hardware-Aligned Per-Tile MX Format Selection for Post-Training Quantization on NVIDIA Blackwell**](https://openreview.net/forum?id=ZGeR4gkEZq)
 
 You may reproduce AdaptQuant or choose another PTQ method that satisfies the requirements of this assignment.
 
@@ -246,7 +246,15 @@ The main focus of this part is **target-model calibration-free quantization**. T
 
 Since the experiments will be conducted on NVIDIA T4 GPUs, hardware-specific low-precision kernels are **not required**. You may use **fake quantization** to simulate the numerical behavior of the target low-precision format and evaluate the resulting model quality.
 
-The performance score will be determined by how closely your reproduced result matches the corresponding result reported by the original method.
+In addition to the calibration-free requirement, the final quantized model must satisfy:
+
+$$\text{Realized Effective Bit Rate}=\frac{\text{Weight Bits} +\text{Activation Bits}}{2}\leq 5.3 \text{ bits}$$
+
+The reported bit rate should reflect the effective bit width used for both **weights** and **activations** after quantization.
+
+For mixed-precision methods, the weight and activation bit widths should be calculated as the average effective bit width after precision allocation, including the scale overhead required by the corresponding quantization format.
+
+The performance score will be determined by the final PPL under the specified evaluation setting.
 
 
 ### Grading
@@ -292,6 +300,7 @@ Your report should include the following:
 
 2. **Result**
    - Final PPL
+   - Final realized effective bit rate and its calculation 
 
 3. **Observation and Discussion**
    - Important observations from your experiment

@@ -1,2 +1,16 @@
 .venv/
 .python/
+__pycache__/
+*.pyc
+part2/results/
+
+# Development helpers; the experiment entry points do not depend on these.
+exercises.py
+check_numerics.py
+bench_inference.py
+
+# Generated metrics outside the results directories.
+part2/case3_svd_only.json
+part2/svd.json
+part3/experiment.json
+part3/baseline.json

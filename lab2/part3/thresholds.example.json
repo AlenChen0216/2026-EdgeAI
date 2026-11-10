@@ -1,0 +1,20 @@
+{
+  "frozen": false,
+  "source": {
+    "reference_model": "meta-llama/Llama-3.1-8B",
+    "revision": null,
+    "corpus": "wikitext/wikitext-2-raw-v1",
+    "split": null,
+    "tokens": 2048,
+    "sequence_sha256": null,
+    "procedure": "AdaptQuant Algorithm 1 and Appendix B; record chosen operating point"
+  },
+  "weight": {
+    "q_proj": null, "k_proj": null, "v_proj": null, "o_proj": null,
+    "gate_proj": null, "up_proj": null, "down_proj": null
+  },
+  "activation": {
+    "q_proj": null, "k_proj": null, "v_proj": null, "o_proj": null,
+    "gate_proj": null, "up_proj": null, "down_proj": null
+  }
+}

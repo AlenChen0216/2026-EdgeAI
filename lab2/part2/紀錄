@@ -1,0 +1,18 @@
+一開始： 直接用 min-max 的 group quantization 方式來做 quantization，結果發現無論怎麼調整 bits (不同層有不同 bits) 或 group size，PPL 都不會下降，甚至還會上升。這表示 min-max 的 group quantization 方式可能不適合我們的模型。
+後來，改成使用 MSE-based clipping 的方式來做 quantization。 結果發現在同樣的 Compression Ration 下， PPL 有下降一些但離 baseline 還是有距離。  (只考慮 權重重建誤差，沒有考慮 activation 的誤差)
+最後，使用 GPTQ 的算法來做 quantization，最後終於成功了。
+1. bit 越多， PPL 越低 (推理好) 但 compression ration 也變低 (減少較少 bytes)。
+2. group size 越低， PPL 越低 (推理好) 但 compression ratio 也變低 (減少較少 bytes)。
+3. 目前看起來，使用的 bits 越多， PPL 越好。
+
+
+case 2:
+
+
+case 3:
+存用 SVD 到達 compression ratio 50% 的情況下，PPL 會比 baseline 高很多。
+且發現就算 SVD 的 compression ratio 為 20 %， PPL 也會比 baseline 高很多。
+因此，改用 SVD-LLM 論文的方法。
+
+
+在我的實做中， SVD 的壓縮方式在壓縮率較差的情況下， PPL 也比 quantization 的方式還要差。 這代表 SVD 的壓縮方式在壓縮率較差的情況下，對於模型的影響比 quantization 還要大。 這可能是因為 SVD 的壓縮方式會破壞模型的結構，而 quantization 則是保留了模型的結構，只是將權重值進行了量化。

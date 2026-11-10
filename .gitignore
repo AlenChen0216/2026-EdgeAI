@@ -1,2 +1,12 @@
+# Generated experiment output
+result/
+results/
 
-/lab0/data/cifar10/cifar-10-python.tar.gz
+# Python caches and local test files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+tests/
+
+# Local editor settings
+*.code-workspace
