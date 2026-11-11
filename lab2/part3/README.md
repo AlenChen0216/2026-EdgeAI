@@ -20,6 +20,26 @@ bash run.sh --thresholds thresholds.json \
 
 命令使用 `Qwen/Qwen3-4B`、float16 與指定 seed，並使用 WikiText-2 test 評估。終端輸出 PPL，而`experiment_reproduced.json` 會保存 PPL、weight bits、activation bits、realized effective bit rate 及 `passes_limit`。
 
+## GPU 排程與 log
+
+額外入口會等待可用 GPU，再透過原本的 `run.sh` 執行實驗：
+
+```bash
+python gpu_run.py -- --thresholds thresholds.json --dtype float16 --seed 0
+# 已安裝依賴時
+SKIP_INSTALL=1 python gpu_run.py -- --thresholds thresholds.json
+```
+
+runner 使用 Python 標準函式庫，需求為 Linux、`bash` 和 `nvidia-smi`。預設使用啟動 runner 的 Python，也支援 `PYTHON=/path/to/python`。依賴在排程前安裝一次，輸出保存至 `setup.log`。
+
+每次啟動前查詢各卡的 total／used／free memory，選擇 free memory 最多且嚴格大於 **12288 MiB（12 GiB）** 的 GPU。取得檔案鎖後再次查詢，並以 GPU UUID 設定 `CUDA_VISIBLE_DEVICES`，每次實驗只使用一張卡。既有 `CUDA_VISIBLE_DEVICES` 的限制也會保留（支援實體 index 或唯一 UUID 前綴）。
+
+沒有符合條件的 GPU 或可取得的鎖時，每 30 秒重查，等待過程不寫入 log；可用 `--poll-seconds` 調整間隔。Part2、Part3 共用 `/tmp/edgeai-gpu-<UID>/<GPU UUID>.lock`，避免同一使用者的 runner 重複派發到同一張卡。鎖不會限制其他程式；符合門檻後仍可能在實驗中遇到 OOM。
+
+每次執行會顯示獨立的 `results/gpu_runs/<UTC 時間戳記>_<PID>/`，保存 `setup.log`、`runner.log`、`experiment.log`、`experiment.json` 和 `summary.json`。實驗 stdout／stderr 合併至 `experiment.log`；`experiment.json` 沿用完整 metrics，包括 PPL、weight／activation bits、realized effective bit rate、`passes_limit`、格式分配與儲存資訊。摘要另記錄初始 GPU 狀態、啟動前記憶體、GPU UUID、命令、環境設定、時間、耗時、退出碼與完整 metrics。
+
+runner 管理 metrics 路徑，請勿另傳 `--metrics-json`。實驗失敗、metrics 缺失／無法解析或 GPU 查詢失敗時，以非零退出碼結束並保存錯誤。Ctrl+C 或 SIGTERM 會先終止實驗子程序，再釋放鎖。單次 Part3 實驗只使用一張卡；另一張卡可同時供 Part2 或另一個 runner 使用。
+
 
 ## Appendix：產生 thresholds
 
