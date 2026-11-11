@@ -26,7 +26,6 @@ def element_table(bits):
     """Return (code,value) for finite element encodings, including signed zero.
 
     E4M3's exp=15,mantissa=7 is reserved for NaN; FP4/FP6 use all encodings.
-    This table lets you inspect endpoints/subnormals without answering rounding.
     """
     fmt = FORMATS[bits]
     table = []
@@ -57,5 +56,4 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--bits", type=int, choices=(4, 6, 8), default=4)
-    for code, value in element_table(parser.parse_args().bits):
-        print(f"{code:3d}\t{value:g}")
+    element_table(parser.parse_args().bits)

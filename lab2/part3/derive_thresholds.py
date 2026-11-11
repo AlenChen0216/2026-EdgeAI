@@ -1,4 +1,4 @@
-"""Separate offline reference-model exercise; never uses Qwen or evaluation PPL."""
+"""Derive frozen quantization thresholds from a reference model."""
 
 import argparse
 import hashlib
@@ -46,7 +46,6 @@ def main():
     with torch.no_grad():
         document = derive_thresholds(model, token_ids, target_bits=args.target_bits)
     source = document.setdefault("source", {})
-    source["revision"] = source.get("revision") or "unknown"
     source.update(token_source)
     # Hash canonical JSON bytes of the token list, independent of file whitespace.
     source["sequence_sha256"] = hashlib.sha256(json.dumps(ids, separators=(",", ":")).encode()).hexdigest()

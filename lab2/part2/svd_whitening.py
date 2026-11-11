@@ -6,7 +6,6 @@ The paper's subsequent parameter-update/fine-tuning stage is not used.
 """
 
 from dataclasses import asdict, dataclass
-import sys
 import time
 
 import torch
@@ -101,10 +100,6 @@ def apply_whitened_svd(model, ranks, configs, row_plan, batches, config, *, prov
             try:
                 for sample in range(config.samples):
                     block(hidden[sample:sample+1], **kwargs)
-                    if (sample + 1) % 32 == 0:
-                        print(f"[svd whitening block {block_index+1}/{len(model.model.layers)}] "
-                              f"{group[0]} calibration {sample+1}/{config.samples}",
-                              file=sys.stderr, flush=True)
             finally:
                 handle.remove()
             tokens = accumulator.tokens
@@ -118,9 +113,6 @@ def apply_whitened_svd(model, ranks, configs, row_plan, batches, config, *, prov
                 factors, stats = whitened_svd_linear(block.get_submodule(name), rank, lower)
                 svd_bytes = sum(layer.weight.numel() * layer.weight.element_size() for layer in factors)
                 rows = [row_plan[path, factor] for factor in (0, 1)]
-                print(f"[whitened svd {len(diagnostics)+1}/{len(ranks)}] {path}: "
-                      f"rank={rank}, quant={quant_config.bits}-bit, quantized rows={rows}",
-                      file=sys.stderr, flush=True)
                 for factor in (0, 1):
                     factors[factor] = MixedPrecisionLinear.from_linear(factors[factor], quant_config, rows[factor])
                 diagnostics.append({"name": path, "rank": rank, "bits": quant_config.bits,
@@ -138,8 +130,6 @@ def apply_whitened_svd(model, ranks, configs, row_plan, batches, config, *, prov
                 output = output[0]
             hidden[sample:sample+1].copy_(output)
         del output
-        print(f"[svd whitening block {block_index+1}/{len(model.model.layers)} complete] "
-              f"elapsed={time.monotonic()-started:.1f}s", file=sys.stderr, flush=True)
     del hidden, kwargs
     metadata = {"algorithm": "SVD-LLM section 3.1 whitening with diagonal damping",
                 "settings": asdict(config), "calibration": provenance or {},

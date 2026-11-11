@@ -2,13 +2,12 @@
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 PYTHON="${PYTHON:-python}"
-# Default is the grading environment. Local 5090 development uses its existing
-# CUDA 12.8 environment with SKIP_INSTALL=1 (see README).
+# Set SKIP_INSTALL=1 to use an existing environment.
 if [[ "${SKIP_INSTALL:-0}" != "1" ]]; then
     "$PYTHON" -m pip install -r requirements.txt >&2
 fi
 mkdir -p results
-# Run compression and official PPL evaluation only, without development checks.
+# Run each compression case and its PPL evaluation.
 targets=(0.75 0.81 0.50 0.85)
 # Case4 uses joint SparseGPT pruning/quantization with its own G64 default.
 quantizers=("${CASE1_QUANTIZER:-gptq}" "${CASE2_QUANTIZER:-gptq}" rtn sparsegpt)

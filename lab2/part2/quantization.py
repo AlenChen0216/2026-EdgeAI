@@ -61,13 +61,12 @@ def group_weight(weight, group_size):
 
 
 def choose_qparams(groups, valid, bits):
-    """P2-Q1: group-wise affine min/max quantization parameters.
+    """Calculate group-wise affine min/max quantization parameters.
 
     Input: float groups [O,N,G], bool valid of the same shape, bits in [2,8].
     Return: positive finite scales and finite zero_points, both [O,N,1].
-    Codes use [0,2**bits-1]; a symmetric scheme can still use an offset code.
-    Ignore padding when measuring a group. Think about constant/all-zero groups.
-    Check with a hand-computed one-group example.
+    Codes use [0,2**bits-1]. Padding is excluded; zero is included in the range.
+    All-zero groups use scale 1.
     """
     # Keep parameter calculations in FP32, including for FP16 weights.
     groups = groups.float()
@@ -85,11 +84,10 @@ def choose_qparams(groups, valid, bits):
 
 
 def quantize_values(groups, valid, scales, zero_points, bits):
-    """TODO P2-Q2 (HW Part1 Q1/Q7).
+    """Quantize groups using affine scales and zero points.
 
     Input: groups/valid [O,N,G], qparams [O,N,1]. Return integer codes [O,N,G]
-    in [0,2**bits-1], on the input device. Decide rounding and clamp order;
-    padding must encode zero. Check positive/negative values and endpoints.
+    in [0,2**bits-1], on the input device. Padding encodes zero.
     """
     scaled_tensor = groups/scales
     rounded_tensor = torch.round(scaled_tensor)
@@ -102,11 +100,10 @@ def quantize_values(groups, valid, scales, zero_points, bits):
 
 
 def dequantize_values(codes, scales, zero_points):
-    """TODO P2-Q3 (HW linear quantization r=S(q-Z)).
+    """Reconstruct float values using r = S * (q - Z).
 
     Input: codes [O,N,G], qparams [O,N,1]. Return finite float [O,N,G].
-    Think about arithmetic dtype before subtracting unsigned values. Verify
-    exact reconstruction of zero and of values already on the quantization grid.
+    Codes are converted to FP32 before subtracting zero points.
     """
     codes = codes.to(torch.float32)
     codes = codes - zero_points
@@ -117,11 +114,11 @@ def dequantize_values(codes, scales, zero_points):
 @torch.no_grad()
 def choose_qparams_mse(groups, valid, bits, *, grid_size=21, min_ratio=0.5,
                        group_chunk_size=2048):
-    """Group-wise MSE clipping search (Part1 Q8 applied to Part2 weights).
+    """Search clipping ranges that minimize group-wise weight MSE.
 
     Keep the original min/max parameters as the baseline. Candidate i shrinks
     both zero-inclusive endpoints by a factor in linspace(1,min_ratio,grid_size).
-    Score the ORIGINAL weights after the actual Q2->Q3 round trip, excluding
+    Score the original weights after quantization and reconstruction, excluding
     padding; clipping loss must count too. Strict ties retain the baseline (or
     the first, widest winning candidate). No threshold/mask is stored: the final
     scales and zero points already describe the selected quantization range.

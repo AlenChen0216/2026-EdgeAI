@@ -17,7 +17,6 @@ import hashlib
 import math
 import os
 import random
-import sys
 import time
 
 import torch
@@ -283,10 +282,6 @@ def apply_gptq(model, configs, batches, config, *, provenance=None,
             try:
                 for sample in range(config.samples):
                     block(hidden[sample:sample+1], **kwargs)
-                    if (sample + 1) % 32 == 0:
-                        print(f"[gptq block {block_index+1}/{len(model.model.layers)}] "
-                              f"{names[0]} calibration {sample+1}/{config.samples}",
-                              file=sys.stderr, flush=True)
             finally:
                 handle.remove()
             hessian = accumulator.hessian()
@@ -294,9 +289,6 @@ def apply_gptq(model, configs, batches, config, *, provenance=None,
             del accumulator, layer
             for name in names:
                 path, quant_config = prefix+name, configs[prefix+name]
-                print(f"[gptq {len(diagnostics)+1}/{len(configs)}] {path}: "
-                      f"bits={quant_config.bits}, group={quant_config.group_size}, "
-                      f"qparams={quant_config.qparam_method}", file=sys.stderr, flush=True)
                 replacement, stats = linear_compressor(
                     block.get_submodule(name), hessian, quant_config,
                     damp=config.damp, block_size=config.block_size)
@@ -312,8 +304,6 @@ def apply_gptq(model, configs, batches, config, *, provenance=None,
                 output = output[0]
             hidden[sample:sample+1].copy_(output)
         del output
-        print(f"[gptq block {block_index+1}/{len(model.model.layers)} complete] "
-              f"elapsed={time.monotonic()-started:.1f}s", file=sys.stderr, flush=True)
     del hidden, kwargs
     model._gptq_metadata = {"algorithm": "GPTQ", "settings": asdict(config),
                             "act_order": False, "groups": "dynamic_contiguous",

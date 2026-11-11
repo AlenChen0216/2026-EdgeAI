@@ -3,7 +3,6 @@
 import hashlib
 import json
 import math
-import sys
 from pathlib import Path
 
 import torch
@@ -23,9 +22,9 @@ def load_thresholds(path):
     raw = Path(path).read_bytes()
     document = json.loads(raw)
     if document.get("frozen") is not True:
-        raise NotImplementedError("P3-T1: generate frozen reference thresholds with derive_thresholds.py")
+        raise NotImplementedError("thresholds must be frozen; run derive_thresholds.py")
     source = document.get("source", {})
-    for key in ("reference_model", "revision", "corpus", "split", "sequence_sha256", "procedure"):
+    for key in ("reference_model", "corpus", "split", "sequence_sha256", "procedure"):
         if not isinstance(source.get(key), str) or not source[key].strip():
             raise ValueError(f"threshold source must record {key}")
     if source["reference_model"] != "meta-llama/Llama-3.1-8B":
@@ -44,7 +43,7 @@ def load_thresholds(path):
         result[operand] = {}
         for projection, pair in entries.items():
             if pair is None or (isinstance(pair, list) and None in pair):
-                raise NotImplementedError(f"P3-T1: missing {operand}/{projection} reference thresholds")
+                raise NotImplementedError(f"missing {operand}/{projection} reference thresholds")
             if not isinstance(pair, list) or len(pair) != 2:
                 raise ValueError("each threshold entry must be [t1,t2]")
             converted = []
@@ -196,7 +195,7 @@ def relax_operand(tables, target_bits):
 
 @torch.no_grad()
 def derive_thresholds(reference_model, token_ids, *, target_bits=5.3):
-    """P3-T1: one reference pass, Eq.8 histograms, exact grid search, bit target.
+    """Derive reference thresholds using histograms, grid search and a bit target.
 
     Activations stay at NVFP4 parity; weights absorb the bit-budget slack.
     If this would require weights below FP4, exchange the operands' roles.
@@ -213,8 +212,6 @@ def derive_thresholds(reference_model, token_ids, *, target_bits=5.3):
             moments[name] = inputs.float().square().mean(dim=0)
             importance = layer.weight.float().square().sum(dim=0)
             histograms["activation"][name] = measure_histogram(inputs, importance)
-            print(f"[thresholds activation {len(moments)}/{len(layers)}] {name}",
-                  file=sys.stderr, flush=True)
         return hook
 
     handles = [layer.register_forward_pre_hook(observe(name)) for name, layer in layers.items()]
@@ -226,7 +223,6 @@ def derive_thresholds(reference_model, token_ids, *, target_bits=5.3):
             handle.remove()
     for index, (name, layer) in enumerate(layers.items(), 1):
         histograms["weight"][name] = measure_histogram(layer.weight, moments.pop(name))
-        print(f"[thresholds weight {index}/{len(layers)}] {name}", file=sys.stderr, flush=True)
 
     tables = {operand: {projection: candidate_table([
         h for name, h in entries.items() if name.rsplit(".", 1)[-1] == projection])
@@ -242,7 +238,6 @@ def derive_thresholds(reference_model, token_ids, *, target_bits=5.3):
     effective = (weight["effective_bits"] + activation["effective_bits"]) / 2
     return {"frozen": True, "source": {
         "reference_model": "meta-llama/Llama-3.1-8B",
-        "revision": getattr(reference_model.config, "_commit_hash", None),
         "corpus": "provided-token-ids", "split": "unspecified", "tokens": len(ids),
         "sequence_sha256": hashlib.sha256(json.dumps(ids, separators=(",", ":")).encode()).hexdigest(),
         "procedure": "AdaptQuant Algorithm 1 / Appendix B; full threshold grid; reference-only SQNR slack"},

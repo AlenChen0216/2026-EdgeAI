@@ -14,10 +14,10 @@ from tiles import from_tiles, to_tiles
 
 
 def tile_statistic(tiles, valid):
-    """P3-S1 (Eq.4). Float tiles/bool valid [N,16,32] -> float [N].
+    """Compute the max/RMS statistic for float tiles and masks [N,16,32].
 
     Ignore padding. Evaluate the max/RMS statistic in FP32; all-zero tiles use
-    statistic 0. Check uniform magnitudes and a single nonzero in a full tile.
+    statistic 0. Return one statistic per tile.
     """
     values = tiles.float().masked_fill(~valid, 0).abs()
     maximum = values.amax(dim=(-2, -1))
@@ -29,21 +29,21 @@ def tile_statistic(tiles, valid):
 
 
 def select_formats(statistic, thresholds):
-    """P3-S2 (Eq.5). statistic [N], (t1,t2) -> integer bits [N] in {4,6,8}.
+    """Map statistics [N] and thresholds (t1,t2) to bit widths in {4,6,8}.
 
-    Preserve device and check equality at both thresholds. CAP is +infinity;
-    when t2=CAP no finite statistic may select FP8. Do not inspect PPL here.
+    Threshold comparisons include equality. CAP is +infinity;
+    when t2=CAP no finite statistic selects FP8.
     """
     t1, t2 = thresholds
     return 4 + 2 * (statistic >= t1).long() + 2 * (statistic >= t2).long()
 
 
 def block_scales(tiles, valid, fmt):
-    """P3-Q1 (Eq.2). tiles/valid [N,16,32], MXFormat -> scales [N,16,1].
+    """Compute scales [N,16,1] from tiles, masks and an MX format.
 
     One power-of-two E8M0 scale per ROW, not per tile. Use FP32 and ignore
-    padding; empty/all-zero rows use scale 1. Check a row whose max crosses a
-    power-of-two boundary. Consider the E8M0 exponent range [-127,127].
+    padding; empty/all-zero rows use scale 1. E8M0 exponents are clamped to
+    [-127,127].
     """
     maximum = tiles.float().masked_fill(~valid, 0).abs().amax(dim=-1, keepdim=True)
     safe_maximum = torch.where(maximum > 0, maximum, 1)
@@ -52,12 +52,10 @@ def block_scales(tiles, valid, fmt):
 
 
 def round_elements(normalized, valid, fmt):
-    """P3-Q2 (Section3.2, Table1). Float [N,16,32] -> same-shaped float.
+    """Round normalized tiles [N,16,32] to the selected element format.
 
     Return element-grid values, BEFORE multiplying by scale. Use round-to-nearest
     ties-to-even, subnormals, flush-to-zero, signed saturation. Padding returns 0.
-    Inspect mx_formats.element_table; integer rounding alone cannot simulate FP4.
-    Check every codebook value, midpoints, both signs and overflow endpoints.
     """
     values = normalized.float().masked_fill(~valid, 0)
     magnitude = values.abs().clamp_max(fmt.max_finite)
@@ -70,7 +68,7 @@ def round_elements(normalized, valid, fmt):
 
 @torch.no_grad()
 def fake_quantize_matrix(matrix, thresholds, tile_batch=256, *, return_statistics=False):
-    """Numerical plumbing around exercises; returns float matrix and tile counts.
+    """Fake-quantize a matrix and return float values and format tile counts.
 
     Chunking bounds numerical temporaries. All stored values remain floating
     point, so this path claims neither low-bit storage nor hardware speedups.

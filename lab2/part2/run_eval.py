@@ -37,7 +37,7 @@ def main():
     ap.add_argument("--gptq-block-size", type=int, default=128)
     ap.add_argument("--metrics-json", help="optional detailed byte ledger and experiment metadata")
     ap.add_argument("--submission-output", action="store_true",
-                    help="print only the Case, compression ratio and PPL required by run.sh")
+                    help="accepted for compatibility with existing scripts")
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--dtype", default="float16")
     ap.add_argument("--seed", type=int, default=0)
@@ -90,15 +90,6 @@ def main():
 
     print(f"Case {args.case}" if args.case is not None else "Base")
     print(f"Compression Ratio: {rate:.6%}")
-    if not args.submission_output:
-        svd = None if report is None else report["svd"]
-        pruning = None if report is None else report["pruning"]
-        svd_text = "N/A" if svd is None else f"{svd['compression_ratio']:.6%}"
-        pruning_text = "N/A" if pruning is None else f"{pruning['rate']:.6%}"
-        print(f"SVD Compression Ratio: {svd_text}")
-        print(f"Pruning Rate: {pruning_text}")
-        if pruning is not None:
-            print(f"Pruned Elements: {pruning['element_fraction']:.6%}")
     print(f"PPL: {ppl:.4f}", flush=True)
 
 if __name__ == "__main__":

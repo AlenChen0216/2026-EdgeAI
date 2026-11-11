@@ -2,7 +2,6 @@
 
 import math
 from dataclasses import replace
-import sys
 
 import torch
 from torch import nn
@@ -16,10 +15,8 @@ def choose_layer_configs(case, targets, rate, wbits, group_size):
 
     targets: dict[full name, original nn.Linear]. Return a dict with exactly
     these keys: QuantConfig(bits,group_size) to quantize, None to keep.
-    wbits is an optional CLI override; honor it explicitly when supplied.
-    rate is a requested reduction, not evidence that it was reached. Think about
-    qparam/padding overhead and Case1's strict >75% boundary. Check measured
-    bytes before PPL. Start by filling separate branches for cases 1 and 2.
+    wbits optionally overrides the default bit widths.
+    rate is the requested reduction; actual storage includes qparams and padding.
     """
     if case == 1:
         high_selected_bits = 4 if wbits is None else wbits
@@ -48,9 +45,6 @@ def apply_quantization_plan(model, configs, *, qparam_options=None):
         if config is not None:
             if qparam_options:
                 config = replace(config, **qparam_options)
-            print(f"[compress {index}/{len(configs)}] {name}: bits={config.bits}, "
-                  f"group={config.group_size}, qparams={config.qparam_method}",
-                  file=sys.stderr, flush=True)
             replace_module(model, name, PackedLinear.from_linear(model.get_submodule(name), config))
     return model
 
@@ -68,7 +62,7 @@ def case2(model, tok, rate=0.81, wbits=None, group_size=512, *, qparam_options=N
 
 @torch.no_grad()
 def svd_linear(linear, rank):
-    """P2-SVD: replace W[O,I] with two inference-only Linear factors.
+    """Replace W[O,I] with two inference-only Linear factors.
 
     W ~= A @ B, A=U[:,:r]*S[:r] [O,r], B=Vh[:r,:] [r,I].
     Return nn.Sequential(first,second): first stores B, second stores A and
@@ -276,9 +270,6 @@ def case3(model, tok, rate=0.5, wbits=None, group_size=128, *, qparam_options=No
             compressed = svd_linear(linear, rank)
             before = sum(factor.weight.numel() * factor.weight.element_size() for factor in compressed)
             quantized_rows = [plan[name, factor] for factor in (0, 1)]
-            print(f"[case3 {index}/{len(names)}] {name}: rank={rank}, "
-                  f"quant={config.bits}-bit, group={config.group_size}, "
-                  f"quantized rows={quantized_rows}", file=sys.stderr, flush=True)
             for factor in (0, 1):
                 compressed[factor] = MixedPrecisionLinear.from_linear(
                     compressed[factor], config, quantized_rows[factor])
